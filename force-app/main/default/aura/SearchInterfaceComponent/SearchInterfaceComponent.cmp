@@ -1,0 +1,421 @@
+<aura:component controller="ToMulesoftIntegration"
+    implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction"
+    access="global">
+    <aura:attribute name="AccountName" type="String" />
+    <aura:attribute name="Results" type="List" />
+    <aura:attribute name="AccountNotFound" type="Boolean" default="false" />
+   
+    <aura:attribute name="DisplayInfoAccount" type="Boolean" default="false" />
+    <aura:attribute name="DisplayDetailPersonAccount" type="Boolean" default="false" />
+    <aura:attribute name="DisplayDetailBusinessAccount" type="Boolean" default="false" />
+
+    <aura:attribute name="FirstName" type="string" />
+    <aura:attribute name="LastName" type="string" />
+    <aura:attribute name="disabledNextPage" type="Boolean" default="true" />
+    <aura:attribute name="ServiceUnavailable" type="Boolean" default="false" />
+    <aura:attribute name="AccountFound" type="Boolean" default="false" />
+    <aura:attribute name="NullField" type="Boolean" default="false" />
+    <aura:attribute name="visibilitiAcc" type="Boolean" default="false" />
+    <aura:attribute name="json" type="Object" />
+    <aura:attribute name="ReturnAccount" type="list"/>
+
+    <aura:attribute name="accId" type="string"/>
+    <aura:attribute name="incompleteAcc" type="Boolean" default="false" />
+    <aura:attribute name="caseDescr" type="string"/>
+
+    <aura:attribute name="isButtonActive" type="Boolean" default="true" />
+<div  style="background-color:white;border-radius:10px;padding:15px;margin-left:1%;width:1400px">
+
+
+            <table style="background-color:white">
+                <tr>
+                    <td style="font-weight:900">
+                        <lightning:input type="text" name="input" style="text-align: left;"
+                            label="Search an account" value="{! v.AccountName}" />
+                    </td>
+                    <td>
+                        <div style="margin-left:15px;">
+                            <lightning:icon iconName="utility:info" size="x-small" />
+                            <h1>To search for the account, enter the name<br/> of the account or part of it.  </h1>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        <div style="margin-top: 10px;backgroud-color:white">
+            <table style="margin-top: 10px;backgroud-color:white">
+                <tr>
+                    <td>
+                        <lightning:button label="Search" title="Search Account" onclick="{! c.handleClick }" />
+
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        
+        <table style="margin-top:15px;">
+            <tr>
+                <td>
+                    Nome
+                </td>
+                <td>
+                     C.F./ P.IVA 
+                </td>
+                <td>
+                    Città
+                </td>
+            </tr>
+
+            <aura:iteration items="{!v.json}" var="js">
+                <tr>
+                    <td>
+                        <a id="{!js.Id}" onclick="{!c.getId}">{!js.Name}</a>
+                    </td>
+                    <td>
+                        {!js.PIVAorCF}
+                    </td>
+                    <td>
+                        {!js.BillingCity}
+                    </td>
+                </tr>
+            </aura:iteration>
+        </table>
+
+
+
+
+        <aura:if isTrue="{!v.AccountNotFound ==true}">
+            <div style="margin-top: 10px;"
+                class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning" role="alert">
+                <lightning:icon iconName="utility:warning" size="small" />
+                <h1>
+                    The account is not in the system,<br /> do you want to create it?
+                </h1>
+            </div>
+           <!-- <div style="text-align: left; margin-top: 10px;">
+                <lightning:button label="Create Account" title="Search Account" onclick="{! c.DisplayInfoAccount }" />
+            </div>-->
+        </aura:if>
+
+
+        <aura:if isTrue="{!v.ServiceUnavailable==true}">
+            <div style="margin-top: 10px;"
+                class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                <lightning:icon iconName="utility:error" size="small" />
+                <h1>
+                    Error, Service Unavailable
+                </h1>
+            </div>
+        </aura:if>
+        <aura:if isTrue="{!v.NullField ==true}">
+            <div style="margin-top: 10px;"
+                class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning" role="alert">
+                <lightning:icon iconName="utility:warning" size="small" />
+                <h1>
+                    Please insert a term to search for.
+                </h1>
+            </div>
+        </aura:if>
+
+
+    <!--Page relating to Personal Accounts-->
+
+    <aura:if isTrue="{!v.DisplayDetailPersonAccount==true}">
+        <div role="dialog" aria-labelledby="header43" aura:id="Modalbox" class="slds-modal slds-fade-in-open">
+            <!-- START SPINNER -->
+        <div aura:id="spinnerId" class="slds-spinner_container slds-hide" style='position:fixed'>
+            <div class="slds-spinner--brand  slds-spinner slds-spinner--large slds-is-relative" role="alert">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+        <!-- END SPINNER -->
+            <div class="slds-modal__container" style="Position:relative;max-width:200%; width:40%;">
+                <lightning:recordEditForm aura:id="recordViewForm" objectApiName="Account">
+                    <div class="slds-modal__header slds-is-static" style="height:12%">
+                        <h2 class="slds-text-heading_medium slds-hyphenate">Detail Person Account</h2>
+                    </div>
+                    <div class="modal-body scrollable slds-modal__content slds-p-around--medium"
+                        style="width:100%; height:400px; padding-bottom: 8px;">
+
+                        <lightning:layout multipleRows="true">
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="FirstName" aura:id="FirstName" />
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="LastName" aura:id="LastName" required="true" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="Codice_Fiscale__c" aura:id="CodiceFiscale" required="true" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="PersonEmail" aura:id="PersonEmail" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="Phone" aura:id="Phone" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_2-of-2" style="padding: 5px;">
+                                <h3 class="slds-section__title slds-theme--shade primaryPaletteBorder test-id__section-header-container"
+                                    data-aura-rendered-by="808:2367;a">
+                                    <span
+                                        class="test-id__section-header-title section-header-title slds-p-horizontal--small slds-truncate"
+                                        data-aura-rendered-by="810:2367;a">
+                                        Address Information</span></h3>
+                            </div>
+
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingCity" aura:id="BillingCity" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingStreet" aura:id="BillingStreet" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingState" aura:id="BillingState" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingCountry" aura:id="BillingCountry" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingPostalCode" aura:id="BillingPostalCode" onchange="{!c.activeButtonPerson}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_2-of-2" style="padding: 5px;">
+                                <h3 class="slds-section__title slds-theme--shade primaryPaletteBorder test-id__section-header-container"
+                                    data-aura-rendered-by="808:2367;a">
+                                    <span
+                                        class="test-id__section-header-title section-header-title slds-p-horizontal--small slds-truncate"
+                                        data-aura-rendered-by="810:2367;a">
+                                        Agency Information</span></h3>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+
+                                <lightning:input label="Agente" readonly="true" value="Mario Rossi" />
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+
+                                <lightning:input label="Agenzia" readonly="true" value="Milano Via Dante" />
+                            </div>
+
+                        </lightning:layout>
+                    </div>
+                    <footer class="slds-modal__footer">
+
+                    <lightning:button variant="brand" label="Cancel" onclick="{!c.ClosedSecondPageDetailAccount}" />
+                    <lightning:button variant="brand" label="Send" type="submit" onclick="{!c.SendValuePostPersonalAccount}" disabled="{!v.isButtonActive}"/>
+                </footer>
+                </lightning:recordEditForm>
+                
+            </div>
+        </div>
+        <div class="slds-backdrop slds-fade-in-open"
+            style="max-width:200%;	width:150%;	height:100%;margin-left:-170px;">
+        </div>
+    </aura:if>
+
+
+
+
+    <!--Page relating to Business Accounts-->
+    <aura:if isTrue="{!v.DisplayDetailBusinessAccount==true}">
+        <div role="dialog" aria-labelledby="header43" aura:id="Modalbox" class="slds-modal slds-fade-in-open">
+             <!-- START SPINNER -->
+        <div aura:id="spinnerId" class="slds-spinner_container slds-hide" style='position:fixed'>
+            <div class="slds-spinner--brand  slds-spinner slds-spinner--large slds-is-relative" role="alert">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+        <!-- END SPINNER -->
+            <div class="slds-modal__container" style="Position:relative;max-width:200%; width:40%;">
+
+
+                <lightning:recordEditForm aura:id="recordViewForm" objectApiName="Account" >
+                <!--<lightning:messages aura:id="AccMessage" />-->
+                    <div class="slds-modal__header slds-is-static" style="height:12%">
+                        <h2 class="slds-text-heading_medium slds-hyphenate">Detail Business Account</h2>
+                    </div>
+                    <div class="modal-body scrollable slds-modal__content slds-p-around--medium"
+                        style="width:100%; height:400px; padding-bottom: 8px;">
+
+                        <lightning:layout multipleRows="true">
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="Name" aura:id="NameAcc" required="true" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="Titolo__c" aura:id="Titolo"  onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="VAT_Number__c" aura:id="VAT_Number" required="true" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="Email_Agenzia__c" aura:id="Email_Agenzia" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="Phone" aura:id="Phone" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_2-of-2" style="padding: 5px;">
+                                <h3 class="slds-section__title slds-theme--shade primaryPaletteBorder test-id__section-header-container"
+                                    data-aura-rendered-by="808:2367;a">
+                                    <span
+                                        class="test-id__section-header-title section-header-title slds-p-horizontal--small slds-truncate"
+                                        data-aura-rendered-by="810:2367;a">
+                                        Address Information</span></h3>
+                            </div>
+
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingCity" aura:id="BillingCity" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingStreet" aura:id="BillingStreet" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingState" aura:id="BillingState" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingCountry" aura:id="BillingCountry" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+                                <lightning:inputField fieldName="BillingPostalCode" aura:id="BillingPostalCode" onchange="{!c.activeButtonBusiness}"/>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_2-of-2" style="padding: 5px;">
+                                <h3 class="slds-section__title slds-theme--shade primaryPaletteBorder test-id__section-header-container"
+                                    data-aura-rendered-by="808:2367;a">
+                                    <span
+                                        class="test-id__section-header-title section-header-title slds-p-horizontal--small slds-truncate"
+                                        data-aura-rendered-by="810:2367;a">
+                                        Agency Information</span></h3>
+                            </div>
+
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+
+                                <lightning:input label="Agente" readonly="true" value="Mario Rossi" />
+                            </div>
+                            <div class="slds-col--padded slds-size_1-of-2" style="padding: 5px;">
+
+                                <lightning:input label="Agenzia" readonly="true" value="Milano Via Dante" />
+                            </div>
+                        </lightning:layout>
+                    </div>
+                    <footer class="slds-modal__footer">
+
+                    <lightning:button variant="brand" label="Cancel" onclick="{!c.ClosedSecondPageBusinessAccount}" />
+                    <lightning:button variant="brand" label="Send" type="submit" onclick="{!c.SendValuePostBusinessAccount}" disabled="{!v.isButtonActive}"/>
+                </footer>
+        
+                </lightning:recordEditForm>
+                <!-- -->
+            </div>
+        </div>
+        <div class="slds-backdrop slds-fade-in-open"
+            style="max-width:200%;	width:150%;	height:100%;margin-left:-170px;">
+        </div>
+
+
+
+    </aura:if>
+
+
+
+
+
+    <!--Modal for result second get -->
+    <aura:if isTrue="{!v.visibilitiAcc==true}">
+        
+        <div role="dialog" aria-labelledby="header43" aura:id="Modalbox" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" style="Position:relative;max-width:200%; width:90%;">
+
+                <div class="slds-modal__header">
+                    <h4 class="title slds-text-heading--medium"><b>Detail Account</b></h4>
+                </div>
+                <div class="slds-modal__content slds-p-around_large" style="text-align:left;height:200px;">
+                    <div style="margin-top:10px;">
+                        <table style="width:100%">
+                            <tr>
+                            <th>Name</th>
+                            <th>C.F./P.IVA</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Street</th>
+                            <th>City</th>
+                            <th>State</th>
+                            <th>Country</th>
+                            <th>PostalCode</th>
+                            </tr>
+                     
+                            <aura:iteration items="{!v.ReturnAccount}" var="ac">
+                                <tr>
+                                    <td>
+                                       {!ac.Name}
+                                    </td>
+                                    <td>
+                                        {!ac.CForPIVA}
+                                    </td>
+                                    <td>
+                                        {!ac.Email}
+                                    </td>
+                                    <td>
+                                        {!ac.Phone}
+                                    </td>
+                                    <td>
+                                        {!ac.BillingStreet}
+                                    </td>
+                                    <td>
+                                        {!ac.BillingCity}
+                                    </td>
+                                    <td>
+                                        {!ac.BillingState}
+                                    </td>
+                                    <td>
+                                        {!ac.BillingCountry}
+                                    </td>
+                                    <td>
+                                        {!ac.BillingPostalCode}
+                                    </td>
+                                    
+
+                                    
+                                    
+                                    
+                                    
+                                   
+                                </tr>
+                            </aura:iteration>
+                        </table>
+
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <aura:if isTrue="{! v.incompleteAcc == true}">
+                        <lightning:button label="Open Case" onclick="{!c.SendPostCase}" />
+                    </aura:if>
+                    <lightning:button label="Cancel" onclick="{!c.ClosedDetailAccount}" />
+                </footer>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-fade-in-open"
+            style="max-width:200%;	width:150%;	height:100%;margin-left:-170px;"></div>
+
+
+    </aura:if>
+</div>
+</aura:component>

@@ -1,0 +1,15 @@
+<template>
+    <div style="background-color:white;padding:10px;font-weight:900;margin-left:1%;border-radius:10px;width:1400px;text-align:center;margin-top:5%">Opportunity Managament</div><br/>
+    <div class="card_wrapper">
+        <template for:each={pickVals} for:item="item">
+            <div class="stageContainer" key={item} style={calcWidth}>
+                <h1 class="column_heading" style="background-color:#DEDEDE;color:black;text-align:center	">{item}</h1>
+                <c-drag-and-drop-list records={records} stage={item}
+                 onlistitemdrag={handleListItemDrag}
+                 onitemdrop={handleItemDrop}
+                 ></c-drag-and-drop-list>
+            </div>
+            
+        </template>
+    </div>
+</template>
