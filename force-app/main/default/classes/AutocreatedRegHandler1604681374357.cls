@@ -1,6 +1,8 @@
 /**
   Registration Handler for External Identity Trail
 **/
+
+/*ADD MOCK COMMENT FROM VISUALSTUDIO*/
 global class AutocreatedRegHandler1604681374357
  implements Auth.RegistrationHandler{
     
